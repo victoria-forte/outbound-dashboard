@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outbound Performance Dashboard — B2B Command Centre</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090b;
+      --surface: #141417;
+      --surface-2: #1c1c21;
+      --surface-3: #242429;
+      --border: #27272a;
+      --border-hover: #3f3f46;
+      --text: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #00c853;
+      --accent-dim: rgba(0, 200, 83, .12);
+      --accent-border: rgba(0, 200, 83, .25);
+      --blue: #3b82f6;
+      --blue-dim: rgba(59, 130, 246, .12);
+      --purple: #a855f7;
+      --purple-dim: rgba(168, 85, 247, .12);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245, 158, 11, .12);
+      --rose: #f43f5e;
+      --rose-dim: rgba(244, 63, 94, .12);
+      --cyan: #06b6d4;
+      --cyan-dim: rgba(6, 182, 212, .12);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.4);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(9, 9, 11, .82); backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+    }
+    nav .inner {
+      max-width: 1280px; margin: auto;
+      display: flex; align-items: center; justify-content: space-between; height: 56px;
+    }
+    nav .logo {
+      font-weight: 700; font-size: .95rem; color: var(--text);
+      display: flex; align-items: center; gap: .6rem;
+      text-decoration: none;
+    }
+    nav .logo .badge {
+      padding: .15rem .5rem; border-radius: 4px;
+      background: var(--accent-dim); color: var(--accent);
+      font-size: .65rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    }
+    nav .nav-links { display: flex; align-items: center; gap: 1.25rem; }
+    nav .nav-links a {
+      text-decoration: none; color: var(--text-secondary); font-size: .85rem; font-weight: 500;
+      transition: color .15s;
+    }
+    nav .nav-links a:hover { color: var(--text); }
+    nav .sf-link {
+      padding: .4rem .85rem; border-radius: var(--radius-sm);
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: .8rem; font-weight: 600;
+      text-decoration: none; transition: all .15s;
+    }
+    nav .sf-link:hover { border-color: var(--accent-border); color: var(--accent); }
+
+    /* ── HEADER ── */
+    .header {
+      max-width: 1280px; margin: auto; padding: 2.5rem 2rem 1.5rem;
+      display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .header h1 {
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.2;
+    }
+    .header h1 span { color: var(--accent); }
+    .header p { color: var(--text-secondary); font-size: .9rem; margin-top: .25rem; }
+    .header-actions { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1rem; border-radius: var(--radius-sm);
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--border); transition: all .15s;
+      text-decoration: none; font-family: inherit;
+    }
+    .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
+    .btn-primary:hover { background: #00e676; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-hover); }
+
+    /* ── SETUP BANNER ── */
+    .setup-banner {
+      max-width: 1280px; margin: 0 auto 1.5rem; padding: 0 2rem;
+    }
+    .setup-card {
+      background: var(--surface); border: 1px solid var(--accent-border);
+      border-radius: var(--radius); padding: 2rem; text-align: center;
+    }
+    .setup-card h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: .5rem; }
+    .setup-card p { color: var(--text-secondary); font-size: .9rem; margin-bottom: 1.25rem; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .setup-card .input-row {
+      display: flex; gap: .75rem; max-width: 600px; margin: 0 auto 1rem;
+    }
+    .setup-card input {
+      flex: 1; padding: .6rem .85rem; border-radius: var(--radius-sm);
+      background: var(--surface-3); border: 1px solid var(--border);
+      color: var(--text); font-size: .85rem; font-family: inherit;
+    }
+    .setup-card input:focus { outline: none; border-color: var(--accent); }
+    .setup-card .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+      margin-top: 1.5rem; text-align: left;
+    }
+    .setup-card .step {
+      background: var(--surface-2); border-radius: var(--radius-sm); padding: 1rem;
+    }
+    .setup-card .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      background: var(--accent-dim); color: var(--accent);
+      font-size: .7rem; font-weight: 700; margin-bottom: .5rem;
+    }
+    .setup-card .step h4 { font-size: .82rem; font-weight: 600; margin-bottom: .25rem; }
+    .setup-card .step p { font-size: .78rem; color: var(--text-muted); margin-bottom: 0; }
+
+    .setup-card .template-link {
+      display: inline-flex; align-items: center; gap: .35rem;
+      color: var(--accent); font-size: .82rem; font-weight: 600;
+      text-decoration: none; margin-top: .5rem;
+    }
+    .setup-card .template-link:hover { text-decoration: underline; }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      max-width: 1280px; margin: auto; padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .status-left { display: flex; align-items: center; gap: .5rem; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .status-dot.connected { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .status-dot.error { background: var(--rose); }
+    .status-text { font-size: .8rem; color: var(--text-muted); }
+    .status-text strong { color: var(--text-secondary); font-weight: 600; }
+
+    /* ── PERIOD TABS ── */
+    .period-bar {
+      max-width: 1280px; margin: auto; padding: 0 2rem;
+      display: flex; align-items: center; gap: .5rem; margin-bottom: 1.5rem;
+    }
+    .period-btn {
+      padding: .4rem .9rem; border-radius: 6px; border: 1px solid transparent;
+      background: transparent; color: var(--text-muted); font-size: .8rem; font-weight: 600;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .period-btn:hover { color: var(--text-secondary); background: var(--surface-2); }
+    .period-btn.active { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+      max-width: 1280px; margin: auto; padding: 0 2rem 2rem;
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: .75rem;
+    }
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem;
+      position: relative; overflow: hidden; transition: all .2s;
+    }
+    .kpi-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .kpi-card.calls::before { background: var(--blue); }
+    .kpi-card.meetings::before { background: var(--purple); }
+    .kpi-card.connects::before { background: var(--cyan); }
+    .kpi-card.opps::before { background: var(--accent); }
+    .kpi-card.pbr::before { background: var(--amber); }
+    .kpi-card.closed::before { background: var(--rose); }
+
+    .kpi-label {
+      font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-muted); margin-bottom: .5rem;
+      display: flex; align-items: center; gap: .35rem;
+    }
+    .kpi-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .kpi-card.calls .kpi-dot { background: var(--blue); }
+    .kpi-card.meetings .kpi-dot { background: var(--purple); }
+    .kpi-card.connects .kpi-dot { background: var(--cyan); }
+    .kpi-card.opps .kpi-dot { background: var(--accent); }
+    .kpi-card.pbr .kpi-dot { background: var(--amber); }
+    .kpi-card.closed .kpi-dot { background: var(--rose); }
+
+    .kpi-value {
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi-target {
+      font-size: .75rem; color: var(--text-muted); margin-top: .25rem;
+      display: flex; align-items: center; gap: .35rem;
+    }
+    .kpi-pct {
+      padding: .1rem .35rem; border-radius: 4px; font-weight: 700; font-size: .7rem;
+    }
+    .kpi-pct.on-track { background: rgba(0, 200, 83, .15); color: var(--accent); }
+    .kpi-pct.behind { background: rgba(245, 158, 11, .15); color: var(--amber); }
+    .kpi-pct.at-risk { background: rgba(244, 63, 94, .15); color: var(--rose); }
+
+    .kpi-progress {
+      margin-top: .6rem; height: 3px; background: var(--surface-3); border-radius: 2px;
+      overflow: hidden;
+    }
+    .kpi-progress-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+    .kpi-card.calls .kpi-progress-fill { background: var(--blue); }
+    .kpi-card.meetings .kpi-progress-fill { background: var(--purple); }
+    .kpi-card.connects .kpi-progress-fill { background: var(--cyan); }
+    .kpi-card.opps .kpi-progress-fill { background: var(--accent); }
+    .kpi-card.pbr .kpi-progress-fill { background: var(--amber); }
+    .kpi-card.closed .kpi-progress-fill { background: var(--rose); }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      max-width: 1280px; margin: auto; padding: 0 2rem 3rem;
+      display: grid; grid-template-columns: 1fr 340px; gap: 1.25rem;
+    }
+
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .panel-header {
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title {
+      font-size: .9rem; font-weight: 700;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .panel-title .count {
+      padding: .1rem .45rem; border-radius: 4px;
+      background: var(--surface-3); color: var(--text-muted);
+      font-size: .7rem; font-weight: 600;
+    }
+
+    /* ── LEADERBOARD TABLE ── */
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table thead th {
+      padding: .6rem 1rem; font-size: .7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--text-muted); text-align: left;
+      border-bottom: 1px solid var(--border); background: var(--surface-2);
+      white-space: nowrap;
+    }
+    .lb-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+    .lb-table tbody tr:hover { background: var(--surface-2); }
+    .lb-table tbody tr:last-child { border-bottom: none; }
+    .lb-table td {
+      padding: .7rem 1rem; font-size: .85rem; font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 6px; font-size: .75rem; font-weight: 700;
+    }
+    .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
+    .rank-2 { background: linear-gradient(135deg, #d1d5db, #9ca3af); color: #000; }
+    .rank-3 { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; }
+    .rank-default { background: var(--surface-3); color: var(--text-muted); }
+
+    .rep-cell { display: flex; align-items: center; gap: .6rem; }
+    .rep-avatar {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .rep-name { font-weight: 600; font-size: .85rem; }
+    .rep-role { font-size: .7rem; color: var(--text-muted); }
+
+    .metric-cell { font-weight: 600; }
+    .metric-zero { color: var(--text-muted); font-weight: 400; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .highlight-card {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .highlight-card:last-child { border-bottom: none; }
+    .highlight-label {
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--text-muted); margin-bottom: .5rem;
+    }
+    .highlight-value {
+      font-size: 1.3rem; font-weight: 800; margin-bottom: .15rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .highlight-sub { font-size: .8rem; color: var(--text-secondary); }
+
+    .source-links { padding: 1.25rem; }
+    .source-links h4 {
+      font-size: .75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--text-muted); margin-bottom: .75rem;
+    }
+    .source-link {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .55rem .75rem; border-radius: var(--radius-sm);
+      text-decoration: none; color: var(--text-secondary); font-size: .8rem; font-weight: 500;
+      transition: all .15s; margin-bottom: .35rem;
+    }
+    .source-link:hover { background: var(--surface-2); color: var(--text); }
+    .source-link .source-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; flex-shrink: 0;
+    }
+
+    /* ── LOADING ── */
+    .loading-overlay {
+      padding: 3rem 2rem; text-align: center;
+    }
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid var(--surface-3);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .6s linear infinite; margin: 0 auto .75rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p { color: var(--text-muted); font-size: .85rem; }
+
+    .empty-state {
+      padding: 3rem 2rem; text-align: center;
+    }
+    .empty-state p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1rem; }
+
+    .error-msg {
+      padding: 2rem; text-align: center;
+      color: var(--rose); font-size: .85rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      max-width: 1280px; margin: auto; padding: 2rem;
+      text-align: center; font-size: .75rem; color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--text-secondary); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: var(--surface-2); border: 1px solid var(--accent-border);
+      color: var(--accent); padding: .65rem 1.15rem; border-radius: var(--radius-sm);
+      font-size: .8rem; font-weight: 600; z-index: 300;
+      opacity: 0; transform: translateY(8px);
+      transition: all .2s ease; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+      .main { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .header { flex-direction: column; align-items: flex-start; }
+      .nav-links { display: none !important; }
+      .lb-table { font-size: .78rem; }
+      .lb-table td, .lb-table th { padding: .5rem .6rem; }
+      .setup-card .steps { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .kpi-card, .panel { animation: fadeInUp .4s ease both; }
+    .kpi-card:nth-child(1) { animation-delay: .05s; }
+    .kpi-card:nth-child(2) { animation-delay: .1s; }
+    .kpi-card:nth-child(3) { animation-delay: .15s; }
+    .kpi-card:nth-child(4) { animation-delay: .2s; }
+    .kpi-card:nth-child(5) { animation-delay: .25s; }
+    .kpi-card:nth-child(6) { animation-delay: .3s; }
+
+    .hidden { display: none !important; }
+
+    .disconnect-btn {
+      background: none; border: none; color: var(--text-muted); font-size: .75rem;
+      cursor: pointer; padding: .2rem .4rem; border-radius: 4px; font-family: inherit;
+    }
+    .disconnect-btn:hover { color: var(--rose); background: var(--rose-dim); }
+
+    .sheet-link {
+      color: var(--accent); text-decoration: none; font-size: .8rem; font-weight: 600;
+    }
+    .sheet-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="inner">
+    <a href="index.html" class="logo">
+      B2B Command Centre <span class="badge">Outbound</span>
+    </a>
+    <div class="nav-links">
+      <a href="acceleration.html">Acceleration</a>
+      <a href="dashboards-acceleration.html">Dashboards</a>
+      <a href="https://banff.lightning.force.com/lightning/r/Report/00OOG000005Uw8X2AS/view" target="_blank" class="sf-link">Open in Salesforce &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div>
+    <h1>Outbound <span>Performance</span></h1>
+    <p id="headerSub">Q2 2026 &middot; Source: Most Recent = Outbound</p>
+  </div>
+  <div class="header-actions">
+    <span id="lastRefreshed" style="font-size:.75rem; color:var(--text-muted);"></span>
+    <button class="btn btn-ghost" id="refreshBtn" onclick="refreshData()">Refresh</button>
+    <button class="btn btn-ghost" onclick="exportCSV()">Export CSV</button>
+    <a id="editSheetBtn" href="#" target="_blank" class="btn btn-primary hidden">Edit Google Sheet &rarr;</a>
+  </div>
+</div>
+
+<!-- ── SETUP BANNER (shown when no sheet is connected) ── -->
+<div class="setup-banner" id="setupBanner">
+  <div class="setup-card">
+    <h2>Connect Your Google Sheet</h2>
+    <p>Power this dashboard with a shared Google Sheet so the whole team sees the same data. Create a sheet with the right structure, publish it, and paste the URL below.</p>
+    <div class="input-row">
+      <input type="text" id="sheetUrlInput" placeholder="Paste your Google Sheet URL or Sheet ID here...">
+      <button class="btn btn-primary" onclick="connectSheet()">Connect</button>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Create the Sheet</h4>
+        <p>Create a Google Sheet with 3 tabs named <strong>Weekly</strong>, <strong>Monthly</strong>, <strong>Quarterly</strong>. Each tab should have columns: <strong>Name, Role, Region, Calls, Meetings, Connects, Opps, PBR, Closed</strong>.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Add a Targets Row</h4>
+        <p>Optionally add a row with Name = <strong>TARGET</strong> in each tab to set per-metric targets. If omitted, defaults are used.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Publish to Web</h4>
+        <p>Go to <strong>File &rarr; Share &rarr; Publish to web</strong> and publish the entire document as a web page. Then paste the Sheet URL above.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATUS BAR (shown when connected) ── -->
+<div class="status-bar hidden" id="statusBar">
+  <div class="status-left">
+    <span class="status-dot connected" id="statusDot"></span>
+    <span class="status-text" id="statusText">Connected to Google Sheet</span>
+    <button class="disconnect-btn" onclick="disconnectSheet()" title="Disconnect sheet">&times; disconnect</button>
+  </div>
+</div>
+
+<!-- ── PERIOD TABS ── -->
+<div class="period-bar hidden" id="periodBar">
+  <button class="period-btn active" data-period="Weekly">This Week</button>
+  <button class="period-btn" data-period="Monthly">This Month</button>
+  <button class="period-btn" data-period="Quarterly">Q2 Total</button>
+</div>
+
+<!-- ── KPI CARDS ── -->
+<div class="kpi-grid hidden" id="kpiGrid"></div>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="main hidden" id="mainContent">
+  <!-- Leaderboard -->
+  <div class="panel" style="animation-delay: .35s;">
+    <div class="panel-header">
+      <div class="panel-title">
+        Rep Leaderboard <span class="count" id="repCount">0</span>
+      </div>
+      <select id="sortSelect" style="padding:.3rem .5rem; border-radius:6px; background:var(--surface-3); border:1px solid var(--border); color:var(--text-secondary); font-size:.75rem; font-family:inherit; cursor:pointer;">
+        <option value="total">Sort: Total Score</option>
+        <option value="calls">Sort: Calls</option>
+        <option value="meetings">Sort: Meetings</option>
+        <option value="connects">Sort: Connects</option>
+        <option value="opps">Sort: Opportunities</option>
+        <option value="pbr">Sort: PBR</option>
+        <option value="closed">Sort: Deals Closed</option>
+      </select>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Rep</th>
+            <th>Calls</th>
+            <th>Meetings</th>
+            <th>Connects</th>
+            <th>Opps</th>
+            <th>PBR</th>
+            <th>Closed</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+          <tr><td colspan="8"><div class="loading-overlay"><div class="spinner"></div><p>Loading data...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="panel" style="animation-delay: .4s;">
+      <div class="panel-header">
+        <div class="panel-title">Top Performer</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-label">Highest Outbound Score</div>
+        <div class="highlight-value" id="topName">&mdash;</div>
+        <div class="highlight-sub" id="topStats">Loading...</div>
+      </div>
+    </div>
+
+    <div class="panel" style="animation-delay: .45s;">
+      <div class="panel-header">
+        <div class="panel-title">Conversion Rates</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-label">Avg Calls per Rep</div>
+        <div class="highlight-value" id="avgCalls">0</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-label">Call &rarr; Connect Rate</div>
+        <div class="highlight-value" id="connectRate">0%</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-label">Connect &rarr; Meeting Rate</div>
+        <div class="highlight-value" id="meetingRate">0%</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-label">Meeting &rarr; Opp Rate</div>
+        <div class="highlight-value" id="oppRate">0%</div>
+      </div>
+    </div>
+
+    <div class="panel" style="animation-delay: .5s;">
+      <div class="source-links">
+        <h4>Salesforce Source Reports</h4>
+        <a href="https://banff.lightning.force.com/lightning/r/Report/00OOG000005Uw8X2AS/view" target="_blank" class="source-link">
+          <div class="source-icon" style="background: var(--accent-dim); color: var(--accent);">SF</div>
+          Outbound Opportunities
+        </a>
+        <a href="https://banff.lightning.force.com/lightning/r/Dashboard/01ZOG000002HAEj2AO/view?queryScope=userFolders" target="_blank" class="source-link">
+          <div class="source-icon" style="background: var(--blue-dim); color: var(--blue);">SF</div>
+          B2B Team Dashboard
+        </a>
+        <a href="https://banff.lightning.force.com/lightning/r/Dashboard/01ZOG000002o4vJ2AQ/view" target="_blank" class="source-link">
+          <div class="source-icon" style="background: var(--purple-dim); color: var(--purple);">SF</div>
+          B2B Acceleration Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p>Outbound Performance Dashboard &middot; B2B Command Centre &middot; Shopify Commercial</p>
+  <p style="margin-top:.25rem;">Data sourced from Google Sheets &middot; Filter Salesforce by <strong>Source - Most Recent = Outbound</strong></p>
+</footer>
+
+<script>
+const CONFIG_KEY = 'outbound_dash_config';
+const METRICS = ['calls','meetings','connects','opps','pbr','closed'];
+
+const KPI_CONFIG = [
+  { key: 'calls',    label: 'Outbound Calls',    cls: 'calls' },
+  { key: 'meetings', label: 'Outbound Meetings',  cls: 'meetings' },
+  { key: 'connects', label: 'Outbound Connects',  cls: 'connects' },
+  { key: 'opps',     label: 'Opps Created',        cls: 'opps' },
+  { key: 'pbr',      label: 'PBR Created',         cls: 'pbr' },
+  { key: 'closed',   label: 'Deals Closed',        cls: 'closed' },
+];
+
+const DEFAULT_TARGETS = { calls: 80, meetings: 10, connects: 20, opps: 3, pbr: 2, closed: 1 };
+
+const AVATAR_COLORS = [
+  '#3b82f6','#a855f7','#06b6d4','#f59e0b','#f43f5e',
+  '#10b981','#6366f1','#ec4899','#14b8a6','#f97316'
+];
+
+let sheetId = null;
+let currentPeriod = 'Weekly';
+let sheetData = {};
+let targets = {};
+
+// ── Google Sheet Parsing ──
+
+function extractSheetId(input) {
+  if (!input) return null;
+  input = input.trim();
+  const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(input)) return input;
+  return null;
+}
+
+function sheetCsvUrl(id, tab) {
+  return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      rows.length === 0 ? rows.push([current]) : rows[rows.length - 1].push(current);
+      current = '';
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (current || (rows.length && rows[rows.length - 1])) {
+        if (rows.length === 0) rows.push([current]);
+        else rows[rows.length - 1].push(current);
+        current = '';
+        rows.push([]);
+      }
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+    } else {
+      current += ch;
+    }
+  }
+  if (current) {
+    if (rows.length === 0) rows.push([current]);
+    else rows[rows.length - 1].push(current);
+  }
+  return rows.filter(r => r.length > 1 || (r.length === 1 && r[0].trim()));
+}
+
+function normalizeHeader(h) {
+  const s = h.toLowerCase().trim();
+  if (s === 'name' || s === 'rep' || s === 'rep name') return 'name';
+  if (s === 'role' || s === 'title') return 'role';
+  if (s === 'region' || s === 'geo') return 'region';
+  if (s === 'calls' || s === 'outbound calls') return 'calls';
+  if (s === 'meetings' || s === 'outbound meetings') return 'meetings';
+  if (s === 'connects' || s === 'outbound connects') return 'connects';
+  if (s.includes('opp') || s === 'opportunities' || s === 'outbound opportunities created') return 'opps';
+  if (s === 'pbr' || s.includes('pbr')) return 'pbr';
+  if (s.includes('closed') || s.includes('deals') || s === 'deals closed') return 'closed';
+  return s;
+}
+
+async function fetchTab(tab) {
+  const url = sheetCsvUrl(sheetId, tab);
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch "${tab}" tab (${resp.status})`);
+  const text = await resp.text();
+  const rows = parseCSV(text);
+  if (rows.length < 2) return { reps: [], targets: null };
+
+  const headers = rows[0].map(normalizeHeader);
+  const idx = {};
+  headers.forEach((h, i) => { idx[h] = i; });
+
+  const reps = [];
+  let tabTargets = null;
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    const name = (row[idx.name] || '').trim();
+    if (!name) continue;
+
+    if (name.toUpperCase() === 'TARGET') {
+      tabTargets = {};
+      METRICS.forEach(m => {
+        tabTargets[m] = parseInt(row[idx[m]]) || DEFAULT_TARGETS[m];
+      });
+      continue;
+    }
+
+    const rep = {
+      name,
+      role: (row[idx.role] || '').trim() || 'Rep',
+      region: (row[idx.region] || '').trim() || '',
+    };
+    METRICS.forEach(m => {
+      rep[m] = parseInt(row[idx[m]]) || 0;
+    });
+    reps.push(rep);
+  }
+
+  return { reps, targets: tabTargets };
+}
+
+async function fetchAllTabs() {
+  const tabs = ['Weekly', 'Monthly', 'Quarterly'];
+  const results = {};
+  const errors = [];
+
+  for (const tab of tabs) {
+    try {
+      results[tab] = await fetchTab(tab);
+    } catch (e) {
+      errors.push(tab);
+      results[tab] = { reps: [], targets: null };
+    }
+  }
+
+  sheetData = results;
+  tabs.forEach(tab => {
+    targets[tab] = results[tab].targets || { ...DEFAULT_TARGETS };
+  });
+
+  return errors;
+}
+
+// ── Rendering ──
+
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function getAvatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getRepScore(rep) {
+  return (rep.calls || 0) + (rep.meetings || 0) * 5 + (rep.connects || 0) * 3 +
+         (rep.opps || 0) * 15 + (rep.pbr || 0) * 10 + (rep.closed || 0) * 25;
+}
+
+function getTotals(reps) {
+  const t = {};
+  METRICS.forEach(m => { t[m] = 0; });
+  reps.forEach(r => METRICS.forEach(m => { t[m] += r[m] || 0; }));
+  return t;
+}
+
+function getPctClass(pct) {
+  if (pct >= 75) return 'on-track';
+  if (pct >= 40) return 'behind';
+  return 'at-risk';
+}
+
+function getSortedReps() {
+  const data = sheetData[currentPeriod];
+  if (!data) return [];
+  const reps = [...data.reps];
+  const sortKey = document.getElementById('sortSelect').value;
+  return reps.sort((a, b) => {
+    if (sortKey === 'total') return getRepScore(b) - getRepScore(a);
+    return (b[sortKey] || 0) - (a[sortKey] || 0);
+  });
+}
+
+function renderKPIs() {
+  const data = sheetData[currentPeriod];
+  if (!data) return;
+  const totals = getTotals(data.reps);
+  const t = targets[currentPeriod] || DEFAULT_TARGETS;
+  const repCount = Math.max(data.reps.length, 1);
+  const grid = document.getElementById('kpiGrid');
+
+  grid.innerHTML = KPI_CONFIG.map(k => {
+    const val = totals[k.key];
+    const target = (t[k.key] || DEFAULT_TARGETS[k.key]) * repCount;
+    const pct = target > 0 ? Math.round((val / target) * 100) : 0;
+    return `
+      <div class="kpi-card ${k.cls}">
+        <div class="kpi-label"><span class="kpi-dot"></span>${k.label}</div>
+        <div class="kpi-value">${val.toLocaleString()}</div>
+        <div class="kpi-target">
+          <span>${target.toLocaleString()} target</span>
+          <span class="kpi-pct ${getPctClass(pct)}">${pct}%</span>
+        </div>
+        <div class="kpi-progress">
+          <div class="kpi-progress-fill" style="width:${Math.min(pct, 100)}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderLeaderboard() {
+  const body = document.getElementById('leaderboardBody');
+  const sorted = getSortedReps();
+  document.getElementById('repCount').textContent = sorted.length;
+
+  if (sorted.length === 0) {
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>No rep data found in the "${currentPeriod}" tab.</p></div></td></tr>`;
+    return;
+  }
+
+  body.innerHTML = sorted.map((rep, i) => {
+    const rankCls = i < 3 ? `rank-${i + 1}` : 'rank-default';
+    const color = getAvatarColor(rep.name);
+    const mc = v => v > 0 ? `<span class="metric-cell">${v.toLocaleString()}</span>` : `<span class="metric-zero">0</span>`;
+    return `
+      <tr>
+        <td><span class="rank-badge ${rankCls}">${i + 1}</span></td>
+        <td>
+          <div class="rep-cell">
+            <div class="rep-avatar" style="background:${color}">${getInitials(rep.name)}</div>
+            <div>
+              <div class="rep-name">${rep.name}</div>
+              <div class="rep-role">${rep.role}${rep.region ? ' &middot; ' + rep.region : ''}</div>
+            </div>
+          </div>
+        </td>
+        <td>${mc(rep.calls)}</td>
+        <td>${mc(rep.meetings)}</td>
+        <td>${mc(rep.connects)}</td>
+        <td>${mc(rep.opps)}</td>
+        <td>${mc(rep.pbr)}</td>
+        <td>${mc(rep.closed)}</td>
+      </tr>`;
+  }).join('');
+}
+
+function renderSidebar() {
+  const sorted = getSortedReps();
+  const data = sheetData[currentPeriod];
+  if (!data) return;
+  const totals = getTotals(data.reps);
+  const repCount = data.reps.length;
+
+  if (sorted.length > 0) {
+    const top = sorted[0];
+    document.getElementById('topName').textContent = top.name;
+    document.getElementById('topStats').textContent =
+      `${top.calls} calls · ${top.meetings} meetings · ${top.opps} opps · ${top.closed} closed`;
+  } else {
+    document.getElementById('topName').textContent = '\u2014';
+    document.getElementById('topStats').textContent = 'No data yet';
+  }
+
+  document.getElementById('avgCalls').textContent =
+    repCount > 0 ? Math.round(totals.calls / repCount).toLocaleString() : '0';
+
+  const cr = totals.calls > 0 ? ((totals.connects / totals.calls) * 100).toFixed(1) : '0';
+  document.getElementById('connectRate').textContent = cr + '%';
+
+  const mr = totals.connects > 0 ? ((totals.meetings / totals.connects) * 100).toFixed(1) : '0';
+  document.getElementById('meetingRate').textContent = mr + '%';
+
+  const or2 = totals.meetings > 0 ? ((totals.opps / totals.meetings) * 100).toFixed(1) : '0';
+  document.getElementById('oppRate').textContent = or2 + '%';
+}
+
+function render() {
+  renderKPIs();
+  renderLeaderboard();
+  renderSidebar();
+}
+
+// ── Actions ──
+
+async function connectSheet() {
+  const input = document.getElementById('sheetUrlInput').value;
+  const id = extractSheetId(input);
+  if (!id) {
+    showToast('Invalid Google Sheet URL or ID');
+    return;
+  }
+
+  sheetId = id;
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({ sheetId: id }));
+
+  showDashboard();
+  setStatus('loading');
+  try {
+    const errors = await fetchAllTabs();
+    if (errors.length === 3) {
+      setStatus('error', 'Could not fetch any tabs. Make sure the sheet is published to web.');
+      return;
+    }
+    if (errors.length > 0) {
+      setStatus('connected', `Connected (missing tabs: ${errors.join(', ')})`);
+    } else {
+      setStatus('connected');
+    }
+    render();
+    updateTimestamp();
+    showToast('Sheet connected');
+  } catch (e) {
+    setStatus('error', 'Failed to connect. Ensure the sheet is published to web.');
+  }
+}
+
+function disconnectSheet() {
+  if (!confirm('Disconnect the Google Sheet?')) return;
+  sheetId = null;
+  sheetData = {};
+  localStorage.removeItem(CONFIG_KEY);
+  hideDashboard();
+  showToast('Disconnected');
+}
+
+async function refreshData() {
+  if (!sheetId) return;
+  const btn = document.getElementById('refreshBtn');
+  btn.textContent = 'Refreshing...';
+  btn.disabled = true;
+  try {
+    const errors = await fetchAllTabs();
+    render();
+    updateTimestamp();
+    if (errors.length > 0 && errors.length < 3) {
+      setStatus('connected', `Connected (missing tabs: ${errors.join(', ')})`);
+    } else if (errors.length === 0) {
+      setStatus('connected');
+    }
+    showToast('Data refreshed');
+  } catch (e) {
+    showToast('Refresh failed');
+  }
+  btn.textContent = 'Refresh';
+  btn.disabled = false;
+}
+
+function exportCSV() {
+  const sorted = getSortedReps();
+  if (sorted.length === 0) return showToast('No data to export');
+  let csv = 'Rank,Name,Role,Region,Calls,Meetings,Connects,Opps,PBR,Closed,Score\n';
+  sorted.forEach((r, i) => {
+    csv += `${i+1},"${r.name}","${r.role}","${r.region}",${r.calls},${r.meetings},${r.connects},${r.opps},${r.pbr},${r.closed},${getRepScore(r)}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `outbound_${currentPeriod.toLowerCase()}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV exported');
+}
+
+// ── UI Helpers ──
+
+function showDashboard() {
+  document.getElementById('setupBanner').classList.add('hidden');
+  document.getElementById('statusBar').classList.remove('hidden');
+  document.getElementById('periodBar').classList.remove('hidden');
+  document.getElementById('kpiGrid').classList.remove('hidden');
+  document.getElementById('mainContent').classList.remove('hidden');
+  const editBtn = document.getElementById('editSheetBtn');
+  editBtn.classList.remove('hidden');
+  editBtn.href = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+}
+
+function hideDashboard() {
+  document.getElementById('setupBanner').classList.remove('hidden');
+  document.getElementById('statusBar').classList.add('hidden');
+  document.getElementById('periodBar').classList.add('hidden');
+  document.getElementById('kpiGrid').classList.add('hidden');
+  document.getElementById('mainContent').classList.add('hidden');
+  document.getElementById('editSheetBtn').classList.add('hidden');
+}
+
+function setStatus(type, msg) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  if (type === 'connected') {
+    dot.className = 'status-dot connected';
+    text.innerHTML = msg || `Connected to <a href="https://docs.google.com/spreadsheets/d/${sheetId}/edit" target="_blank" class="sheet-link">Google Sheet</a>`;
+  } else if (type === 'error') {
+    dot.className = 'status-dot error';
+    text.innerHTML = `<span style="color:var(--rose)">${msg || 'Connection error'}</span>`;
+  } else if (type === 'loading') {
+    dot.className = 'status-dot';
+    dot.style.background = 'var(--amber)';
+    text.textContent = 'Loading data from Google Sheet...';
+  }
+}
+
+function updateTimestamp() {
+  const el = document.getElementById('lastRefreshed');
+  const now = new Date();
+  el.textContent = 'Last refreshed: ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── Event Listeners ──
+
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    render();
+  });
+});
+
+document.getElementById('sortSelect').addEventListener('change', renderLeaderboard);
+
+document.getElementById('sheetUrlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') connectSheet();
+});
+
+// ── Init ──
+
+(async function init() {
+  try {
+    const raw = localStorage.getItem(CONFIG_KEY);
+    if (raw) {
+      const config = JSON.parse(raw);
+      if (config.sheetId) {
+        sheetId = config.sheetId;
+        showDashboard();
+        setStatus('loading');
+        const errors = await fetchAllTabs();
+        if (errors.length === 3) {
+          setStatus('error', 'Could not fetch any tabs. Verify the sheet is still published.');
+        } else if (errors.length > 0) {
+          setStatus('connected', `Connected (missing tabs: ${errors.join(', ')})`);
+        } else {
+          setStatus('connected');
+        }
+        render();
+        updateTimestamp();
+        return;
+      }
+    }
+  } catch {}
+  hideDashboard();
+})();
+</script>
+
+</body>
+</html>
